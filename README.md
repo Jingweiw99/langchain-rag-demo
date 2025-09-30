@@ -41,15 +41,35 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 ```
 
-### 3. 配置ModelScope
+### 3. 下载模型
 
-首次运行时，ModelScope会自动从服务器下载模型。默认模型会保存在：
-- Linux/Mac: `~/.cache/modelscope/hub/`
-- Windows: `C:\Users\用户名\.cache\modelscope\hub\`
+使用 ModelScope 下载所需的模型：
 
-如需修改模型缓存路径，可设置环境变量：
+```python
+from modelscope.hub.snapshot_download import snapshot_download
+
+# 下载 Qwen3-Embedding-4B 嵌入模型
+embedding_model_dir = snapshot_download('Qwen/Qwen3-Embedding-4B')
+print(f"嵌入模型路径：{embedding_model_dir}")
+
+# 下载 Qwen2.5-3B-Instruct 对话模型
+llm_model_dir = snapshot_download('Qwen/Qwen2.5-3B-Instruct')
+print(f"对话模型路径：{llm_model_dir}")
+```
+
+**或者直接运行下载脚本：**
 ```bash
-export MODELSCOPE_CACHE=/your/custom/path
+python download_models.py
+```
+
+### 4. 配置模型路径
+
+下载完成后，编辑 `config.py` 文件，设置模型的本地路径：
+
+```python
+# 修改为你的实际模型路径
+EMBEDDING_MODEL_PATH = "/path/to/.cache/modelscope/models/Qwen/Qwen3-Embedding-4B"
+LLM_MODEL_PATH = "/path/to/.cache/modelscope/models/Qwen/Qwen2___5-3B-Instruct"
 ```
 
 ## 使用方法
@@ -73,11 +93,9 @@ python get_vector.py
 ```
 
 这个过程会：
-1. 从ModelScope下载 Qwen3-Embedding-4B 模型
+1. 从本地加载 Qwen3-Embedding-4B 模型
 2. 加载并切分知识库文档
 3. 生成向量并保存到 `./faiss/knowledge/` 目录
-
-**注意**: 首次运行会下载约8GB的embedding模型，请耐心等待。
 
 ### 第三步：启动问答系统
 
@@ -86,11 +104,9 @@ python main.py
 ```
 
 这个过程会：
-1. 从ModelScope下载 Qwen2.5-3B-Instruct 模型（首次运行）
+1. 从本地加载 Qwen2.5-3B-Instruct 模型
 2. 加载向量数据库
 3. 启动交互式问答
-
-**注意**: 首次运行会下载约6GB的LLM模型，请耐心等待。
 
 ### 使用示例
 
@@ -114,10 +130,12 @@ L码适合身高165-170cm，体重57.5-65kg的人群。
 .
 ├── README.md              # 说明文档
 ├── requirements.txt       # Python依赖
+├── config.py             # 配置文件（模型路径等）
 ├── model.py              # Qwen对话模型封装
 ├── embedding_model.py    # Qwen嵌入模型封装
 ├── get_vector.py         # 向量数据库创建脚本
 ├── main.py               # 主程序（问答系统）
+├── download_models.py    # 模型下载脚本
 ├── knowledge.txt         # 知识库文件（示例）
 └── faiss/                # 向量数据库存储目录（自动创建）
     └── knowledge/
@@ -182,12 +200,12 @@ print(torch.cuda.is_available())  # 返回True表示可以使用GPU
 
 ## 常见问题
 
-### Q1: 模型下载失败？
+### Q1: 模型路径错误？
 
-**A**: 可能是网络问题。可以：
-1. 配置代理
-2. 使用ModelScope镜像站点
-3. 手动下载模型并放到缓存目录
+**A**: 请检查 `config.py` 中的模型路径是否正确。可以通过以下方式查找模型：
+```bash
+find ~/.cache/modelscope -name "Qwen*" -type d
+```
 
 ### Q2: CUDA out of memory 错误？
 

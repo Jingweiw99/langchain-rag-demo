@@ -1,10 +1,11 @@
-from langchain.document_loaders import UnstructuredFileLoader
+from langchain_community.document_loaders import UnstructuredFileLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS
 from langchain.embeddings.base import Embeddings
 from embedding_model import EmbeddingModel
 from typing import List
 import os
+import config
 
 class CustomEmbeddings(Embeddings):
     """自定义Embeddings类，用于与LangChain集成"""
@@ -21,30 +22,33 @@ class CustomEmbeddings(Embeddings):
         embedding = self.embedding_model.encode_single(text)
         return embedding.tolist()
 
-def create_vector_db(knowledge_file: str, vector_db_path: str = "./faiss/knowledge"):
+def create_vector_db(knowledge_file: str, vector_db_path: str = "./faiss/knowledge", embedding_model_path: str = None):
     """
     创建向量数据库
     :param knowledge_file: 知识库文件路径
     :param vector_db_path: 向量数据库保存路径
+    :param embedding_model_path: 嵌入模型路径
     """
     print(f"开始处理知识库文件: {knowledge_file}")
     
     # 第一步：加载文档
+    print("正在加载文档...")
     loader = UnstructuredFileLoader(knowledge_file)
     data = loader.load()
     print(f'已加载文档数量: {len(data)}')
 
     # 第二步：切分文本
+    print("正在切分文本...")
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=50
+        chunk_size=config.CHUNK_SIZE,
+        chunk_overlap=config.CHUNK_OVERLAP
     )
     split_docs = text_splitter.split_documents(data)
     print(f'切分后的文档块数量: {len(split_docs)}')
 
     # 第三步：初始化嵌入模型
     print("正在加载嵌入模型...")
-    embedding_model = EmbeddingModel(model_name="Qwen/Qwen3-Embedding-4B")
+    embedding_model = EmbeddingModel(model_path=embedding_model_path)
     embedding_model.load_model()
     
     embeddings = CustomEmbeddings(embedding_model)
@@ -61,10 +65,13 @@ def create_vector_db(knowledge_file: str, vector_db_path: str = "./faiss/knowled
     return split_docs
 
 if __name__ == "__main__":
-    # 示例：创建向量数据库
-    knowledge_file = "knowledge.txt"
-    if os.path.exists(knowledge_file):
-        result = create_vector_db(knowledge_file)
+    # 使用配置文件中的设置创建向量数据库
+    if os.path.exists(config.KNOWLEDGE_FILE):
+        result = create_vector_db(
+            knowledge_file=config.KNOWLEDGE_FILE,
+            vector_db_path=config.VECTOR_DB_PATH,
+            embedding_model_path=config.EMBEDDING_MODEL_PATH
+        )
         print(f"处理完成，共生成 {len(result)} 个文档块")
     else:
-        print(f"知识库文件 {knowledge_file} 不存在，请先创建知识库文件")
+        print(f"知识库文件 {config.KNOWLEDGE_FILE} 不存在，请先创建知识库文件")

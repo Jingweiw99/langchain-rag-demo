@@ -2,30 +2,37 @@ from modelscope import AutoTokenizer, AutoModel
 import torch
 import numpy as np
 from typing import List
+import os
 
 class EmbeddingModel:
-    def __init__(self, model_name="Qwen/Qwen3-Embedding-4B"):
+    def __init__(self, model_path=None):
         """
         初始化嵌入模型
-        :param model_name: ModelScope上的模型名称
+        :param model_path: 本地模型路径，如果为None则使用默认路径
         """
-        self.model_name = model_name
+        # 如果没有指定路径，使用默认的本地路径
+        if model_path is None:
+            model_path = "/mnt/workspace/.cache/modelscope/models/Qwen/Qwen3-Embedding-4B"
+        self.model_path = model_path
         self.tokenizer = None
         self.model = None
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
     
     def load_model(self):
-        """从ModelScope加载嵌入模型"""
-        print(f"正在从ModelScope加载嵌入模型: {self.model_name}")
+        """从本地路径加载嵌入模型"""
+        print(f"正在从本地加载嵌入模型: {self.model_path}")
         print(f"使用设备: {self.device}")
         
+        if not os.path.exists(self.model_path):
+            raise FileNotFoundError(f"模型路径不存在: {self.model_path}")
+        
         self.tokenizer = AutoTokenizer.from_pretrained(
-            self.model_name,
+            self.model_path,
             trust_remote_code=True
         )
         
         self.model = AutoModel.from_pretrained(
-            self.model_name,
+            self.model_path,
             trust_remote_code=True,
             device_map="auto" if self.device == "cuda" else None,
             torch_dtype=torch.float16 if self.device == "cuda" else torch.float32
