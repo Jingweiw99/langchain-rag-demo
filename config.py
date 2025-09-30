@@ -4,11 +4,12 @@
 # 如果你的模型在其他位置，请修改这里的路径
 
 # Qwen3-Embedding-4B 嵌入模型路径
-EMBEDDING_MODEL_PATH = "/mnt/workspace/.cache/modelscope/models/Qwen/Qwen3-Embedding-4B"
+#EMBEDDING_MODEL_PATH = "/mnt/workspace/.cache/modelscope/models/Qwen/Qwen3-Embedding-4B"
+EMBEDDING_MODEL_PATH = "/mnt/workspace/.cache/modelscope/models/Qwen/Qwen3-Embedding-0___6B"
 
 # Qwen2.5-3B-Instruct 对话模型路径
-LLM_MODEL_PATH = "/mnt/workspace/.cache/modelscope/models/Qwen/Qwen2___5-3B-Instruct"
-
+#LLM_MODEL_PATH = "/mnt/workspace/.cache/modelscope/models/Qwen/Qwen2___5-3B-Instruct"
+LLM_MODEL_PATH = "/mnt/workspace/.cache/modelscope/models/Qwen/Qwen3-1___7B"
 # 向量数据库路径
 VECTOR_DB_PATH = "./faiss/knowledge"
 

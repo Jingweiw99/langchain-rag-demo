@@ -13,26 +13,37 @@ def download_models():
     print("开始下载 Qwen 模型")
     print("=" * 60)
     
-    # 下载 Qwen3-Embedding-4B 嵌入模型
-    print("\n1. 下载 Qwen3-Embedding-4B 嵌入模型...")
+    # # 下载 Qwen3-Embedding-4B 嵌入模型
+    # print("\n1. 下载 Qwen3-Embedding-4B 嵌入模型...")
+    # print("   模型大小约 8GB，请耐心等待...")
+    # try:
+    #     embedding_model_dir = snapshot_download('Qwen/Qwen3-Embedding-4B')
+    #     print(f"✓ 嵌入模型下载完成！")
+    #     print(f"  路径：{embedding_model_dir}")
+    # except Exception as e:
+    #     print(f"✗ 嵌入模型下载失败：{str(e)}")
+    #     return False
+    
+    # # 下载 Qwen2.5-3B-Instruct 对话模型
+    # print("\n2. 下载 Qwen2.5-3B-Instruct 对话模型...")
+    # print("   模型大小约 6GB，请耐心等待...")
+    # try:
+    #     llm_model_dir = snapshot_download('Qwen/Qwen2.5-3B-Instruct')
+    #     print(f"✓ 对话模型下载完成！")
+    #     print(f"  路径：{llm_model_dir}")
+    # except Exception as e:
+    #     print(f"✗ 对话模型下载失败：{str(e)}")
+    #     return False
+
+    # 下载 Qwen/Qwen3-Embedding-0.6B 嵌入模型
+    print("\n1. Qwen/Qwen3-Embedding-0.6B 嵌入模型...")
     print("   模型大小约 8GB，请耐心等待...")
     try:
-        embedding_model_dir = snapshot_download('Qwen/Qwen3-Embedding-4B')
+        embedding_model_dir = snapshot_download('Qwen/Qwen3-Embedding-0.6B')
         print(f"✓ 嵌入模型下载完成！")
         print(f"  路径：{embedding_model_dir}")
     except Exception as e:
         print(f"✗ 嵌入模型下载失败：{str(e)}")
-        return False
-    
-    # 下载 Qwen2.5-3B-Instruct 对话模型
-    print("\n2. 下载 Qwen2.5-3B-Instruct 对话模型...")
-    print("   模型大小约 6GB，请耐心等待...")
-    try:
-        llm_model_dir = snapshot_download('Qwen/Qwen2.5-3B-Instruct')
-        print(f"✓ 对话模型下载完成！")
-        print(f"  路径：{llm_model_dir}")
-    except Exception as e:
-        print(f"✗ 对话模型下载失败：{str(e)}")
         return False
     
     print("\n" + "=" * 60)

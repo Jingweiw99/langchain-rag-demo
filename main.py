@@ -82,7 +82,7 @@ class QASystem:
         related_content = self.get_related_content(docs, max_docs=top_k)
         
         # 定义提示词模板
-        PROMPT_TEMPLATE = """你是一个专业的问答助手。请基于以下已知信息，简洁、准确地回答用户的问题。
+        PROMPT_TEMPLATE = """你是一个专业的问答助手。请基于以下已知信息，直接给出答案，不要解释推理过程。
 
 已知信息:
 {context}
@@ -93,8 +93,6 @@ class QASystem:
 请注意：
 1. 如果已知信息中包含答案，请直接基于这些信息回答
 2. 如果已知信息不足以回答问题，请明确告知用户
-3. 不要编造或添加已知信息之外的内容
-4. 回答要清晰、专业
 
 你的回答:"""
 
@@ -104,7 +102,6 @@ class QASystem:
         )
         
         return prompt.format(context=related_content, question=question)
-    
     def ask(self, question: str, top_k: int = None) -> str:
         """
         问答
@@ -118,7 +115,7 @@ class QASystem:
         if top_k is None:
             top_k = config.TOP_K
         
-        # 创建提示词
+        # 创建提示词 , top_k 这个模型中top_k不可用
         prompt = self.create_prompt(question, top_k)
         
         # 获取答案
@@ -171,11 +168,11 @@ def main():
     # 单次问答示例
     print("=" * 50)
     print("单次问答示例")
-    print("=" * 50)
-    question = "请根据知识库回答问题"
+    question = "身高178，体重68，适合哪个尺码？"
     print(f"\n问题: {question}")
     answer = qa_system.ask(question)
     print(f"回答: {answer}")
+    print("=" * 50)
     
     # 进入交互式模式
     qa_system.interactive_mode()

@@ -1,4 +1,4 @@
-from modelscope import AutoTokenizer, AutoModel
+from modelscope import AutoTokenizer, AutoModelForCausalLM
 from typing import List, Optional
 import torch
 import os
@@ -36,7 +36,11 @@ class ChatModel:
             trust_remote_code=True
         )
         
-        self.model = AutoModel.from_pretrained(
+        # 设置 pad_token（如果不存在）
+        if self.tokenizer.pad_token is None:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+        
+        self.model = AutoModelForCausalLM.from_pretrained(
             self.model_path,
             trust_remote_code=True,
             device_map="auto" if self.device == "cuda" else None,
@@ -59,20 +63,54 @@ class ChatModel:
         if self.model is None:
             raise ValueError("模型未加载，请先调用load_model()方法")
         
-        history = self.history if use_history else []
+        # 构建消息格式
+        messages = []
         
-        # Qwen2.5使用chat方法
-        response, history = self.model.chat(
-            self.tokenizer,
-            prompt,
-            history=history,
-            max_length=self.max_token,
-            temperature=self.temperature,
-            top_p=self.top_p
+        # 添加历史对话
+        if use_history and self.history:
+            messages.extend(self.history)
+        
+        # 添加当前问题
+        messages.append({"role": "user", "content": prompt})
+        
+        # 使用 tokenizer 的 apply_chat_template
+        text = self.tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True
         )
         
+        # 编码输入
+        model_inputs = self.tokenizer([text], return_tensors="pt").to(self.device)
+        
+        # 生成回复
+        print("正在生成回复...", end="", flush=True)
+        with torch.no_grad():
+            generated_ids = self.model.generate(
+                **model_inputs,
+                max_new_tokens=128,  # CPU模式下减少生成长度，提高速度
+                temperature=self.temperature if self.device == "cuda" else 1.0,
+                top_p=self.top_p if self.device == "cuda" else 1.0,
+                do_sample=False if self.device == "cpu" else True,  # CPU模式使用贪心解码，更快
+                pad_token_id=self.tokenizer.pad_token_id,
+                eos_token_id=self.tokenizer.eos_token_id,
+                num_beams=1  # 不使用beam search，更快
+            )
+        print(" 完成！")
+        
+        # 解码输出（只获取新生成的部分）
+        generated_ids = [
+            output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
+        ]
+        response = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+        
+        # 清理响应
+        response = response.strip()
+        
+        # 更新历史
         if use_history:
-            self.history = history
+            self.history.append({"role": "user", "content": prompt})
+            self.history.append({"role": "assistant", "content": response})
         
         return response
     
