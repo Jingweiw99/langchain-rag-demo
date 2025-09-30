@@ -2,6 +2,7 @@ from modelscope import AutoTokenizer, AutoModelForCausalLM
 from typing import List, Optional
 import torch
 import os
+import re
 
 # 自定义Qwen ChatModel
 class ChatModel:
@@ -85,16 +86,29 @@ class ChatModel:
         
         # 生成回复
         print("正在生成回复...", end="", flush=True)
+        
+        # 构建生成参数（只包含模型支持的参数）
+        gen_kwargs = {
+            "max_new_tokens": 128,  # CPU模式下减少生成长度，提高速度
+            "pad_token_id": self.tokenizer.pad_token_id,
+            "eos_token_id": self.tokenizer.eos_token_id,
+            "num_beams": 1,  # 不使用beam search，更快
+        }
+        
+        # 根据设备类型添加采样参数
+        if self.device == "cuda":
+            gen_kwargs.update({
+                "do_sample": True,
+                "temperature": self.temperature,
+                "top_p": self.top_p,
+            })
+        else:
+            gen_kwargs["do_sample"] = False  # CPU模式使用贪心解码，更快
+        
         with torch.no_grad():
             generated_ids = self.model.generate(
                 **model_inputs,
-                max_new_tokens=128,  # CPU模式下减少生成长度，提高速度
-                temperature=self.temperature if self.device == "cuda" else 1.0,
-                top_p=self.top_p if self.device == "cuda" else 1.0,
-                do_sample=False if self.device == "cpu" else True,  # CPU模式使用贪心解码，更快
-                pad_token_id=self.tokenizer.pad_token_id,
-                eos_token_id=self.tokenizer.eos_token_id,
-                num_beams=1  # 不使用beam search，更快
+                **gen_kwargs
             )
         print(" 完成！")
         
@@ -104,7 +118,9 @@ class ChatModel:
         ]
         response = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
         
-        # 清理响应
+        # 清理响应 - 移除<think>标签及其内容
+        response = response.strip()
+        response = re.sub(r'<think>.*?</think>', '', response, flags=re.DOTALL)
         response = response.strip()
         
         # 更新历史
