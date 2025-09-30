@@ -1,6 +1,7 @@
-/__pycahce__
+/__pycache__
 /.cache
 /.ipynb_checkpoints
 /.lingma_storage
 /.virtual_documents
 /.idea
+__pycache__/model.cpython-311.pyc

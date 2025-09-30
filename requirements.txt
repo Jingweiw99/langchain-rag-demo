@@ -1,10 +1,35 @@
-modelscope
-torch
-transformers
-langchain
-langchain-community
-faiss-cpu
-sentence-transformers
-unstructured
-python-magic-bin
-tiktoken
+# 核心依赖 - 指定版本号以确保兼容性
+modelscope>=1.29.0
+torch>=2.3.1
+transformers>=4.55.2
+langchain>=0.3.27
+langchain-community>=0.3.30
+langchain-core>=0.3.76
+langchain-text-splitters>=0.3.11
+faiss-cpu>=1.12.0
+sentence-transformers>=5.1.0
+
+# 数据处理
+numpy>=1.26.4
+pandas>=2.2.3
+datasets>=3.2.0
+
+# 文档处理
+unstructured>=0.18.15
+pypdf>=6.1.1
+python-docx
+tiktoken>=0.11.0
+
+# 工具库
+tqdm>=4.67.1
+requests>=2.32.5
+
+# 可选：Web 框架（如需部署 API 服务）
+# fastapi>=0.116.1
+# gradio>=5.42.0
+# uvicorn>=0.35.0
+
+# 可选：评估工具
+# evalscope>=0.17.1
+# rouge-score>=0.1.2
+# sacrebleu>=2.5.1

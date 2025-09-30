@@ -4,7 +4,8 @@ import torch
 import os
 import re
 
-# 自定义Qwen ChatModel
+# 自定义Qwen ChatModel (支持温度采样参数版本)
+# 适用于 Qwen2.5-3B-Instruct 等支持高级采样参数的模型
 class ChatModel:
     def __init__(self, model_path=None):
         """
@@ -56,7 +57,7 @@ class ChatModel:
 
     def chat(self, prompt: str, use_history: bool = True) -> str:
         """
-        模型对话
+        模型对话 (支持温度采样参数)
         :param prompt: 输入提示
         :param use_history: 是否使用历史对话
         :return: 模型回复
@@ -87,14 +88,34 @@ class ChatModel:
         # 生成回复
         print("正在生成回复...", end="", flush=True)
         
-        # 只使用模型支持的基本生成参数
-        # 注意：某些模型（如Qwen3-1.7B）不支持temperature、top_p等采样参数
+        # 构建生成参数（包含温度采样等高级参数）
+        gen_kwargs = {
+            "max_new_tokens": 512 if self.device == "cuda" else 128,
+            "pad_token_id": self.tokenizer.pad_token_id,
+            "eos_token_id": self.tokenizer.eos_token_id,
+        }
+        
+        # 根据设备类型添加采样参数
+        if self.device == "cuda":
+            # GPU模式：使用完整的采样参数
+            gen_kwargs.update({
+                "do_sample": True,
+                "temperature": self.temperature,
+                "top_p": self.top_p,
+                "repetition_penalty": 1.1,
+            })
+        else:
+            # CPU模式：简化采样参数以提高速度
+            gen_kwargs.update({
+                "do_sample": True,
+                "temperature": self.temperature,
+                "top_p": self.top_p,
+            })
+        
         with torch.no_grad():
             generated_ids = self.model.generate(
                 **model_inputs,
-                max_new_tokens=128,
-                pad_token_id=self.tokenizer.pad_token_id,
-                eos_token_id=self.tokenizer.eos_token_id
+                **gen_kwargs
             )
         print(" 完成！")
         
